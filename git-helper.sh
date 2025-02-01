@@ -124,18 +124,20 @@ else
   case $localBranch in
     develop)
       git switch -c $jira_key
+      localBranch=$jira_key
       ;;
     release)
       git switch -c "${jira_key}_release"
+      localBranch="${jira_key}_release"
       ;;
     master)
       git switch -c "${jira_key}_master"
+      localBranch="${jira_key}_master"
       ;;
     *)
       echo "El nombre de la rama no es válido: $localBranch"
       ;;
   esac
-  localBranch=$jira_key
 fi
 
 if git stash list | grep -q "$stash_name"; then
@@ -206,6 +208,13 @@ if [ $? -eq 0 ]; then
   echo "--------------------------------------------"
   echo "$push_output"
   echo "--------------------------------------------"
+
+  # Abrir el merge request en el navegador
+  echo "Abriendo el merge request en el navegador..."
+  merge_request_url=$(echo "$push_output" | grep -oP 'https://git\.netlogistik\.com[^ ]+merge_requests[^ ]+')
+  xdg-open "$merge_request_url" 2>/dev/null || open "$merge_request_url" 2>/dev/null || start "" "$merge_request_url"
+
+  echo "URL del merge request: $merge_request_url"
 else
   echo "❌ Ocurrió un error al realizar el push."
   echo "--------------------------------------------"
@@ -213,3 +222,6 @@ else
   echo "--------------------------------------------"
   exit 1
 fi
+
+# Volver a ejecutar el script
+exec "$0"
